@@ -14,16 +14,16 @@ contract SimpleBank {
     
     // Fill in the visibility keyword. 
     // Hint: We want to protect our users balance from other contracts
-    mapping (address => uint) balances ;
+    mapping (address => uint) private balances ;
     
     // Fill in the visibility keyword
     // Hint: We want to create a getter function and allow contracts to be able
     //       to see if a user is enrolled.
-    mapping (address => bool) enrolled;
+    mapping (address => bool) public enrolled;
 
     // Let's make sure everyone knows who owns the bank, yes, fill in the
     // appropriate visilibility keyword
-    address owner = msg.sender;
+    address public owner = msg.sender;
     
     /* Events - publicize actions to external listeners
      */
@@ -52,10 +52,11 @@ contract SimpleBank {
 
     /// @notice Get balance
     /// @return The balance of the user
-    function getBalance() public returns (uint) {
+    function getBalance() public view returns (uint) {
       // 1. A SPECIAL KEYWORD prevents function from editing state variables;
       //    allows function to run locally/off blockchain
       // 2. Get the balance of the sender of this transaction
+      return balances[msg.sender];
     }
 
     /// @notice Enroll a customer with the bank
@@ -63,21 +64,27 @@ contract SimpleBank {
     // Emit the appropriate event
     function enroll() public returns (bool){
       // 1. enroll of the sender of this transaction
+      enrolled[msg.sender] = true;
+      emit LogEnrolled();
+      return true;
     }
 
     /// @notice Deposit ether into bank
     /// @return The balance of the user after the deposit is made
-    function deposit() public returns (uint) {
+    function deposit() public payable returns (uint) {
       // 1. Add the appropriate keyword so that this function can receive ether
-    
       // 2. Users should be enrolled before they can make deposits
+      require(enrolled[msg.sender], "User needs to be enrolled");
 
       // 3. Add the amount to the user's balance. Hint: the amount can be
       //    accessed from of the global variable `msg`
+      balances[msg.sender] = balances[msg.sender] + msg.value;
 
       // 4. Emit the appropriate event associated with this function
+      emit LogDepositMade();
 
       // 5. return the balance of sndr of this transaction
+      return balances[msg.sender];
     }
 
     /// @notice Withdraw ether from bank
